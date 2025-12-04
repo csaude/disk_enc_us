@@ -57,7 +57,68 @@ Depois de escolher o disco a utilizar para a instalação, na altura de criaçã
 
 Deverá escolher uma palavra-passe complexa (respeitando as políticas de palavra-passe existentes). É importante não esquecer a palavra-passe, no entanto, no dia a dia, será usada uma chave USB para desbloquear o disco. Esta palavra-passe poderá ser usada no caso em que as chaves USB estejam indisponíveis.
 
-Após a criação dos Volume Groups, deverá verificar se o layout escolhido corresponde ao pretendido, nomeadamente no que concerne ao espaço de disco a utilizar. 
+Após a criação dos Volume Groups, deverá verificar se o layout escolhido corresponde ao pretendido, nomeadamente no que concerne ao espaço de disco a utilizar.
+
+![Layout de partições](img/layout.png)
+
+Podem ser criados mais *Volume Groups* ou *Raids*, dependendo da configuração de discos do servidor. <ins>O que é importante de se garantir é que as partições que contém dados de pacientes estão cifradas (mesmo as partições que tenham backups que contenham informação de pacientes)</ins>.
+
+Quando os discos são superiores a 100GB, a configuração de discos coloca o *Logical Volume principal* (ubuntu-lv) com 100GB e o restante espaço de disco fica disponível para ser adicionado posteriormente. Para se alocar todo o espaço do disco ao Logical Volume, deve-se navegar até ao ubuntu-lv, carregar em ENTER e editar o volume para se poder alocar todo o espaço de disco.
+
+**Neste manual, para facilitar a instalação do sistema operativo, optou-se por cifrar todo o disco e colocar apenas uma partição que ocupa todo o disco.**
+
+## Configuração de Chaves USB para desbloquear o disco
+
+De forma a permitir maior facilidade no desbloqueio dos discos encriptados e sem necessidade de teclado e monitor, foram criados scripts que inicializam USBs com chaves criptográficas que sendo conectadas ao servidor, desbloqueiam o disco no arranque do servidor. Uma vez que o servidor tenha arrancado sem erros, <ins>esta chave deve ser desconectada do servidor e armazenada **num local seguro e separado do servidor** (por razões de segurança não deve permanecer no rack do servidor)</ins>.
+
+Por cada servidor deverão existir localmente duas chaves: uma que fica com o gestor da base de dados (ou quem o substitua) e outra com o gestor distrital (ou num escritório ou Unidade Sanitária distrital). 
+
+Diariamente, aquando do início da actividade, o gestor de dados ou ponto focal deve conectar a chave USB no servidor e ligar o servidor. Após o correcto arranque do servidor, deverá retirar a chave USB do servidor e armazená-la em lugar seguro não próximo ao servidor - numa caixa-forte quando existir, ou caso não exista a caixa-forte, deverá guardar num local fechado com acesso restrito e controlado. Aconselha-se a produção de um procedimento para a gestão das chaves USB. 
+
+Os scripts mencionados estão disponíveis neste repositório e só poderão ser executados em Linux.
+
+### Criação da chave do servidor da Unidade Sanitária
+
+Centralmente, no departamento de IT existirá um computador que armazena todas as chaves das unidades sanitárias, onde se criam as chaves USB para as unidades sanitárias. Denomina-se de servidor de chaves.
+
+**Este servidor de chaves tem de ter o pacote uuid instalado. Deve-se executar o comando apt-get install uuid, mas o script verifica a existência desse pacote.**
+
+Deverão criar uma directoria para conter os scripts *create_key.sh* e *create_usb.sh* neste servidor de chaves. Dentro desta directoria, o script de chaves irá criar uma subdirectoria *keys*, que conterá as chaves das Unidades Sanitárias.
+
+Após copiarem os scripts para o servidor de chaves, deverão efectuar os seguintes comandos para colocar os scripts executáveis:
+
+```
+chmod +x create_key.sh
+chmod +x create_usb.sh
+```
+
+No caso de ser necessário criar uma chave para o servidor de uma unidade sanitária, deve-se executar o script *create_key.sh*.
+
+Em primeiro lugar o *script* irá requerer o nome da unidade sanitária. <ins>Este nome da unidade sanitária não poderá conter espaços</ins>. Por exemplo: *cs_ceramica*.
+
+Se a unidade sanitária já tiver chaves criadas, dará um erro a indicar que as chaves já existem. Se não existir, o *script* cria uma diretoria com o nome da unidade sanitária, dentro da diretoria *keys*. Em caso de erro no *script*, é possível que a diretoria da unidade sanitária seja criada, sem as chaves dentro. Nessas situações, essa diretoria (e apenas essa) deve ser removida e o *script* deverá ser executado novamente para a mesma unidade sanitária.
+
+Se o *script* executar correctamente, dentro desta diretoria existirá um *script* de instalação da chave no servidor (*install.sh*), a chave para desbloquear o servidor (ficheiro com extensão .lek) e uma chave de backup com extensão .txt.
+
+**O ficheiro com extensão .lek tem de ter um nome associado**. Caso o ficheiro seja apenas a extensão *.lek*, deve remover a diretoria da unidade sanitária (na diretoria *keys*) e deve repetir o script *install.sh* para a unidade sanitária pretendida.
+
+Poder-se-ão criar várias chaves USB a partir destas chaves armazenadas. 
+
+Este servidor de chaves pode estar replicado em vários computadores e deverá ter backup. 
+
+### Instalação da Chave no Servidor da Unidade Sanitária
+
+Quando se instala um novo servidor na Unidade Sanitária, deve-se configurar a chave para desbloquear o disco. Essa configuração faz-se da seguinte forma:
+
+* Copiar o script de instalação (*install.sh*) e a chave (*que tem a extensão .lek*) para uma USB normal (não a chave USB). Este *script* de instalação e chave estão na directoria *keys* e na subdirectoria com o nome da unidade sanitária (por exemplo *keys/cs_ceramica*).
+* Colocar a USB normal no servidor.
+* Copiar os ficheiros da USB normal para uma (qualquer) directoria no servidor.
+* Correr o *script install.sh* com *sudo* no servidor - *sudo sh install.sh*
+  * O *script* irá requerer (duas vezes) a introdução da palavra-passe para desbloquear o disco que terá de ser introduzida de forma a que seja adicionada a chave que está na USB como método de autenticação válido.
+  * Entre cada pedido de palavra-passe, é normal o *script* demorar um pouco.
+  * ○	O *script* irá adicionar a chave em todas as partições encriptadas existentes no servidor.
+* Se o *script* não der erro, a configuração está feita.
+* Remover os ficheiros *install.sh* e, caso exista, o ficheiro da chave (que tem a extensão *.lek*) do servidor e da USB. 
 
 
 
