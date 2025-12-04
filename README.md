@@ -136,7 +136,7 @@ Para inicializar a USB da unidade sanitária (com exemplos do parceiro C-Saúde)
 * A seguir, confirma qual a USB que se pretende utilizar, listando as várias USBs ligadas ao computador/servidor.
 * Se a USB selecionada não tiver erros, dará início ao processo de inicialização da chave na USB, copiando a chave da unidade sanitária escolhida para a USB.
 
-Após a execução deste script, a <ins>USB torna-se inutilizável para outros fins</ins>, não sendo normalmente reconhecida nos computadores, o que irá minimizar a utilização da USB para outros fins que não o desbloquear o servidor. Recomenda-se que se use um disco USB com pouco espaço (256 MB é perfeitamente aceitável) e com um formato distinto, como por exemplo uma chave, para ser facilmente identificável.
+Após a execução deste script, a <ins>USB torna-se inutilizável para outros fins</ins>, não sendo normalmente reconhecida nos computadores, o que irá minimizar a utilização da USB para outros fins que não o desbloquear o servidor. Recomenda-se que se use um disco USB com pouco espaço (16 MB é perfeitamente aceitável) e com um formato distinto, como por exemplo uma chave, para ser facilmente identificável.
 
 ![Exemplo de chave USB](img/usb_key.png)
 
