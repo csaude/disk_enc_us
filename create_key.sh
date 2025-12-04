@@ -56,22 +56,23 @@ cat << "EOF" >> "keys/$machinename/install.sh"
 cat << "END" > /bin/luksunlockusb
 #!/bin/sh
 set -e
-if [ ! -e /mnt ]; then
+KEY_NAME="${CRYPTTAB_KEY:-$1}"
+[ -z "$KEY_NAME" ] && KEY_NAME="default"
+if [ ! -d /mnt ]; then
     mkdir -p /mnt
     sleep 3
 fi
 for usbpartition in /dev/disk/by-id/usb-*-part1; do
-  if [ -e $usbpartition ]; then
-    usbdevice=$(readlink -f $usbpartition)
-    if mount -t vfat $usbdevice /mnt 2>/dev/null; then
-        if [ -e /mnt/$CRYPTTAB_KEY.lek ]; then
-            cat /mnt/$CRYPTTAB_KEY.lek
-            umount $usbdevice
-            exit
+    [ -e "$usbpartition" ] || continue
+    usbdevice="$(readlink -f "$usbpartition")"
+    if mount -t vfat "$usbdevice" /mnt 2>/dev/null; then
+        if [ -e "/mnt/${KEY_NAME}.lek" ]; then
+            cat "/mnt/${KEY_NAME}.lek"
+            umount "$usbdevice"
+            exit 0
         fi
-        umount $usbdevice
+        umount "$usbdevice"
     fi
-  fi
 done
 /lib/cryptsetup/askpass "Insira chave USB e pressione ENTER: "
 END
