@@ -35,7 +35,7 @@ A distribuição em uso para os servidores é Ubuntu Linux LTS. A versão exacta
 
 Os repositórios que devem ser utilizados nos servidores são o *main*, *restricted* e *universe*. A razão para restringir o uso do repositório *multiverse* (ver https://help.ubuntu.com/community/Repositories) é que contém software que não é gratuito, não garantindo por isso o cumprimento com as regras do MISAU (ministério da saúde).
 
-Os servidores deverão ter os pacotes actualizados através da ferramenta *apt update* e *apt upgrade*.
+Os servidores deverão ter os pacotes actualizados através da ferramenta ```apt update``` e ```apt upgrade```.
 
 ## Configuração da BIOS
 
