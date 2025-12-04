@@ -67,7 +67,9 @@ Quando os discos são superiores a 100GB, a configuração de discos coloca o *L
 
 ## Configuração de Chaves USB para desbloquear o disco
 
-De forma a permitir maior facilidade no desbloqueio dos discos encriptados e sem necessidade de teclado e monitor, foram criados scripts que inicializam USBs com chaves criptográficas que sendo conectadas ao servidor, desbloqueiam o disco no arranque do servidor. Uma vez que o servidor tenha arrancado sem erros, <ins>esta chave deve ser desconectada do servidor e armazenada **num local seguro e separado do servidor** (por razões de segurança não deve permanecer no rack do servidor)</ins>.
+De forma a permitir maior facilidade no desbloqueio dos discos encriptados e sem necessidade de teclado e monitor, foram criados scripts que inicializam USBs com chaves criptográficas que sendo conectadas ao servidor, desbloqueiam o disco no arranque do servidor. 
+
+Uma vez que o servidor tenha arrancado sem erros, <ins>esta chave deve ser desconectada do servidor e armazenada **num local seguro e separado do servidor** (por razões de segurança não deve permanecer no rack do servidor)</ins>. **Não se deve deixar a chave conectada no servidor.** A chave deve ser armazenada num local separado do servidor e apenas conectada ao servidor quando necessário para o desbloqueio do servidor no arranque do mesmo.
 
 Por cada servidor deverão existir localmente duas chaves: uma que fica com o gestor da base de dados (ou quem o substitua) e outra com o gestor distrital (ou num escritório ou Unidade Sanitária distrital). 
 
