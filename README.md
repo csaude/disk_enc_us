@@ -1,10 +1,10 @@
 # Procedimento para Cifra do disco de Servidores Ubuntu LTS nas Unidades Sanitárias
-(Disk encryption and decryption using USB drive for Health Facilities)
+(Disk encryption and decryption using USB drive for Health Facilities - Procedure in Portuguese)
 
 ## Introdução
 
 Os servidores nas Unidades Sanitárias que têm o Sistema Operativo Ubuntu LTS são normalmente os sistemas que albergam as aplicações e bases de dados mais importantes - dados de
-pacientes. Assim é muito importante que estejam instalados de forma a garantirem a melhor segurança e proteção de dados e isso implica que o disco esteja cifrado de forma que os dados não sejam acedidos caso o servidor seja extraviado.
+pacientes. Assim é muito importante que estejam instalados de forma a garantirem a melhor segurança e proteção de dados e isso implica que o disco esteja cifrado de forma a que os dados não sejam acedidos caso o servidor seja extraviado.
 
 O objectivo deste procedimento é garantir que o disco dos servidores que armazenam os dados dos pacientes estejam cifrados e configurados de forma a facilitar a sua utilização pelos
 intervenientes autorizados para tal, mas torne impossível a leitura dos dados para quem não está autorizado para tal, mantendo uma utilização facilitada do servidor em zonas remotas.
@@ -16,8 +16,6 @@ Qualquer esclarecimento adicional, poderá ser respondido pelo Responsável de S
 Excepções a este procedimento terão de ser exclusivamente autorizadas pelo CDC.
 
 ## Configuração de cifra nos Servidores Ubuntu LTS
-
-Para se configurar a cifra nos servidores, estes têm de ser reinstalados o que significa perder todas as aplicações e dados. Assim, antes de iniciar o processo de cifra do disco, tem de se:
 
 Para se configurar a cifra nos servidores, estes têm de ser reinstalados o que significa perder todas as aplicações e dados. Assim, antes de iniciar o processo de cifra do disco, tem de se:
 
@@ -81,7 +79,7 @@ Os scripts mencionados estão disponíveis neste repositório e só poderão ser
 
 Centralmente, no departamento de IT existirá um computador que armazena todas as chaves das unidades sanitárias, onde se criam as chaves USB para as unidades sanitárias. Denomina-se de servidor de chaves.
 
-**Este servidor de chaves tem de ter o pacote uuid instalado. Deve-se executar o comando apt-get install uuid, mas o script verifica a existência desse pacote.**
+**Este servidor de chaves tem de ter o pacote uuid instalado. Deve-se executar o comando ```apt-get install uuid```, mas o script verifica a existência desse pacote.**
 
 Deverão criar uma directoria para conter os scripts *create_key.sh* e *create_usb.sh* neste servidor de chaves. Dentro desta directoria, o script de chaves irá criar uma subdirectoria *keys*, que conterá as chaves das Unidades Sanitárias.
 
@@ -92,15 +90,15 @@ chmod +x create_key.sh
 chmod +x create_usb.sh
 ```
 
-No caso de ser necessário criar uma chave para o servidor de uma unidade sanitária, deve-se executar o script *create_key.sh*.
+No caso de ser necessário criar uma chave para o servidor de uma unidade sanitária, deve-se executar o script ```create_key.sh```.
 
-Em primeiro lugar o *script* irá requerer o nome da unidade sanitária. <ins>Este nome da unidade sanitária não poderá conter espaços</ins>. Por exemplo: *cs_ceramica*.
+Em primeiro lugar o *script* irá requerer o nome da unidade sanitária. <ins>Este nome da unidade sanitária não poderá conter espaços</ins>. Por exemplo: ```cs_ceramica```.
 
 Se a unidade sanitária já tiver chaves criadas, dará um erro a indicar que as chaves já existem. Se não existir, o *script* cria uma diretoria com o nome da unidade sanitária, dentro da diretoria *keys*. Em caso de erro no *script*, é possível que a diretoria da unidade sanitária seja criada, sem as chaves dentro. Nessas situações, essa diretoria (e apenas essa) deve ser removida e o *script* deverá ser executado novamente para a mesma unidade sanitária.
 
-Se o *script* executar correctamente, dentro desta diretoria existirá um *script* de instalação da chave no servidor (*install.sh*), a chave para desbloquear o servidor (ficheiro com extensão .lek) e uma chave de backup com extensão .txt.
+Se o *script* executar correctamente, dentro desta diretoria existirá um *script* de instalação da chave no servidor (*install.sh*), a chave para desbloquear o servidor (ficheiro com *extensão *.lek*) e uma chave de backup com extensão *.txt*.
 
-**O ficheiro com extensão .lek tem de ter um nome associado**. Caso o ficheiro seja apenas a extensão *.lek*, deve remover a diretoria da unidade sanitária (na diretoria *keys*) e deve repetir o script *install.sh* para a unidade sanitária pretendida.
+**O ficheiro com extensão *.lek* tem de ter um nome associado**. Caso o ficheiro seja apenas a extensão *.lek*, deve remover a diretoria da unidade sanitária (na diretoria *keys*) e deve repetir o script *install.sh* para a unidade sanitária pretendida.
 
 Poder-se-ão criar várias chaves USB a partir destas chaves armazenadas. 
 
@@ -116,9 +114,32 @@ Quando se instala um novo servidor na Unidade Sanitária, deve-se configurar a c
 * Correr o *script install.sh* com *sudo* no servidor - *sudo sh install.sh*
   * O *script* irá requerer (duas vezes) a introdução da palavra-passe para desbloquear o disco que terá de ser introduzida de forma a que seja adicionada a chave que está na USB como método de autenticação válido.
   * Entre cada pedido de palavra-passe, é normal o *script* demorar um pouco.
-  * ○	O *script* irá adicionar a chave em todas as partições encriptadas existentes no servidor.
+  * O *script* irá adicionar a chave em todas as partições encriptadas existentes no servidor.
 * Se o *script* não der erro, a configuração está feita.
 * Remover os ficheiros *install.sh* e, caso exista, o ficheiro da chave (que tem a extensão *.lek*) do servidor e da USB. 
+
+### Criação de Chave USB para desbloquear disco servidor
+
+No servidor de chaves existe o *script create_usb.sh* que permite inicializar a USB com a chave da Unidade Sanitária.
+
+Para tal basta colocar a USB para albergar a chave no servidor de chaves. Tenha cuidado pois <ins>esta USB será formatada (completamente apagada)</ins>.
+
+<ins>É importante que a USB não esteja montada no sistema operativo, porém o script tenta acautelar esta questão.</ins>
+
+Para inicializar a USB da unidade sanitária (com exemplos do parceiro C-Saúde):
+* Executar o comando ```sudo ./create_usb.sh``` (este *script* tem de ser executado com privilégios de administrador)
+  * Caso a USB não esteja conectada ao servidor o *script* vai indicar que não encontrou nenhuma USB e pára o processo, dando a mensagem ```Nenhuma drive USB encontrada no servidor```.
+  * Caso dê um erro de drive *mounted*, pode executar o comando *umount* com a partição indicada no erro. Por exemplo: ```umount /dev/sdb1```
+* Se encontrar drives USB, irá perguntar o nome da unidade sanitária a configurar na USB.
+* A seguir, confirma qual a USB que se pretende utilizar, listando as várias USBs ligadas ao computador/servidor.
+* Se a USB selecionada não tiver erros, dará início ao processo de inicialização da chave na USB, copiando a chave da unidade sanitária escolhida para a USB.
+
+Após a execução deste script, a <ins>USB torna-se inutilizável para outros fins</ins>, não sendo normalmente reconhecida nos computadores, o que irá minimizar a utilização da USB para outros fins que não o desbloquear o servidor. Recomenda-se que se use um disco USB com pouco espaço (256 MB é perfeitamente aceitável) e com um formato distinto, como por exemplo uma chave, para ser facilmente identificável.
+
+![Exemplo de chave USB](img/usb_key.png)
+
+Após estas acções o servidor encontra-se o disco cifrado e preparado para usar a chave USB para desbloquear o disco. Como alternativa, caso a chave USB (a normal e de backup) esteja danificada ou inacessível, pode-se sempre usar a palavra passe definida no início do procedimento. No entanto, desaconselha-se a utilização da palavra passe, recomendando-se a utilização da chave USB.
+
 
 
 
