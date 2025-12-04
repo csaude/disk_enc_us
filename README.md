@@ -53,7 +53,13 @@ Deve-se preferir o RAID por *hardware*, por questões de performance, mas se o s
 
 As partições devem ser baseadas em LVM (Logical Volume Manager) para permitir um posterior incremento ou decremento de espaço. Para mais informações sobre criação e gestão de Volume Groups podem aceder à seguinte página: https://ubuntu.com/server/docs/how-to-manage-logical-volumes.
 
-Depois de escolher o disco a utilizar para a instalação, na altura de criação de um novo Volume Group (vg) deve escolher a cifra (escolhendo a opção “Encrypt the LVM group with LUKS”), de acordo com a imagem seguinte:
+Depois de escolher o disco a utilizar para a instalação, na altura de criação de um novo Volume Group (vg) deve escolher a cifra (escolhendo a opção “Encrypt the LVM group with LUKS”), de acordo com a imagem seguinte: ![Escolha da Passphrase na cifra do disco](img/ImagemPasswordLUKS.png)
+
+Deverá escolher uma palavra-passe complexa (respeitando as políticas de palavra-passe existentes). É importante não esquecer a palavra-passe, no entanto, no dia a dia, será usada uma chave USB para desbloquear o disco. Esta palavra-passe poderá ser usada no caso em que as chaves USB estejam indisponíveis.
+
+Após a criação dos Volume Groups, deverá verificar se o layout escolhido corresponde ao pretendido, nomeadamente no que concerne ao espaço de disco a utilizar. 
+
+
 
 
 
