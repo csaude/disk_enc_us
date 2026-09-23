@@ -43,41 +43,90 @@ Se a chave nao corresponder ao UUID  acima, pode usar a palavra passe colocada n
 EOF
 
 # Create key install script
+# Part 1: OS detection + crypttab modification (variable expansion needed for $keyname)
 cat << EOF > "keys/$machinename/install.sh"
 #!/bin/bash
 echoerr() { cat <<< "\$@" 1>&2; }
+
+# Detect Ubuntu version at install time
+VERSION_ID=\$(grep "^VERSION_ID" /etc/os-release | cut -d'"' -f2)
+UBUNTU_MAJOR=\$(echo "\$VERSION_ID" | cut -d'.' -f1)
+echo "Ubuntu \$VERSION_ID detectado."
+
 sed -i "s/none luks/$keyname luks,discard,keyscript=\/bin\/luksunlockusb/g" /etc/crypttab
 if [ \$? -ne 0 ]; then
-    echoerr falhou a alteracao ao /etc/crypttab, tem sudo?
+    echoerr "falhou a alteracao ao /etc/crypttab, tem sudo?"
     exit 1
 fi
 EOF
+
+# Part 2: unlock script + Ubuntu 24.04 initramfs hook (no variable expansion)
 cat << "EOF" >> "keys/$machinename/install.sh"
 cat << "END" > /bin/luksunlockusb
 #!/bin/sh
-set -e
-KEY_NAME="${CRYPTTAB_KEY:-$1}"
-[ -z "$KEY_NAME" ] && KEY_NAME="default"
-if [ ! -d /mnt ]; then
-    mkdir -p /mnt
-    sleep 3
-fi
-for usbpartition in /dev/disk/by-id/usb-*-part1; do
-    [ -e "$usbpartition" ] || continue
-    usbdevice="$(readlink -f "$usbpartition")"
-    if mount -t vfat "$usbdevice" /mnt 2>/dev/null; then
-        if [ -e "/mnt/${KEY_NAME}.lek" ]; then
-            cat "/mnt/${KEY_NAME}.lek"
-            umount "$usbdevice"
-            exit 0
+# Ubuntu 24.04: o KEY_NAME do crypttab NAO chega de forma fiavel ao keyscript,
+# por isso NAO se depende do nome — usa-se a .lek que estiver na pen.
+# Seguranca: o LUKS valida sempre o material contra os keyslots; uma chave
+# errada e simplesmente recusada (cai no askpass). Uma .lek por pen.
+mkdir -p /mnt
+
+list_parts() {
+    # 1) preferir os by-id de USB; 2) fallback: qualquer particao sd*1
+    for p in /dev/disk/by-id/usb-*-part1; do [ -e "$p" ] && readlink -f "$p"; done
+    for p in /dev/sd*1; do [ -e "$p" ] && echo "$p"; done
+}
+
+# esperar ate ~20s que a pen apareca e contenha uma .lek
+i=0
+while [ "$i" -lt 20 ]; do
+    for dev in $(list_parts | sort -u); do
+        if mount -t vfat -o ro "$dev" /mnt 2>/dev/null; then
+            for lek in /mnt/*.lek; do
+                [ -e "$lek" ] || continue
+                cat "$lek"
+                umount /mnt 2>/dev/null
+                exit 0
+            done
+            umount /mnt 2>/dev/null
         fi
-        umount "$usbdevice"
-    fi
+    done
+    i=$((i + 1))
+    sleep 1
 done
 /lib/cryptsetup/askpass "Insira chave USB e pressione ENTER: "
 END
 chmod 755 /bin/luksunlockusb
+
+# Ubuntu 24.04+: o initramfs-tools deixou de incluir automaticamente o keyscript
+# no initramfs — é necessário um hook explícito
+if [ "$UBUNTU_MAJOR" -ge 24 ]; then
+    echo "Ubuntu 24.04+ detectado — a configurar hook de initramfs..."
+
+    mkdir -p /etc/initramfs-tools/hooks
+    cat << "INHOOK" > /etc/initramfs-tools/hooks/luksunlockusb
+#!/bin/sh
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+  prereqs) prereqs; exit 0 ;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+copy_exec /bin/luksunlockusb
+manual_add_modules vfat nls_cp437 nls_ascii nls_iso8859-1
+force_load usb_storage
+force_load uas
+INHOOK
+    chmod 755 /etc/initramfs-tools/hooks/luksunlockusb
+
+    # Garantir que o cryptsetup é incluído no initramfs
+    CONF_HOOK=/etc/cryptsetup-initramfs/conf-hook
+    if ! grep -q "^CRYPTSETUP=y" "$CONF_HOOK" 2>/dev/null; then
+        echo "CRYPTSETUP=y" >> "$CONF_HOOK"
+    fi
+fi
 EOF
+
+# Part 3: key installation + initramfs update (variable expansion needed)
 base64key=$(cat "keys/$machinename/$keyname.lek" | base64 -w 0)
 cat << EOF >> "keys/$machinename/install.sh"
 echo -n "$base64key" | base64 -d > $keyname.lek
