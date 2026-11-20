@@ -15,7 +15,7 @@ Qualquer esclarecimento adicional, poderá ser respondido pelo Responsável de S
 
 Excepções a este procedimento terão de ser exclusivamente autorizadas pelo CDC.
 
-## Configuração de cifra nos Servidores Ubuntu LTS
+## 1. Configuração de cifra nos Servidores Ubuntu LTS
 
 Para se configurar a cifra nos servidores, estes têm de ser reinstalados o que significa perder todas as aplicações e dados. Assim, antes de iniciar o processo de cifra do disco, tem de se:
 
@@ -29,7 +29,7 @@ Para se configurar a cifra nos servidores, estes têm de ser reinstalados o que 
 
 Executar estes passos demora tempo, tempo esse em que o servidor estará indisponível. É extremamente importante coordenar previamente com as várias equipas que interagem com o servidor (digitação, muzima, idmed, etc), avisando as mesmas do tempo de paragem estimado.
 
-## Distribuição Linux
+### 1.1. Distribuição Linux
 
 A distribuição em uso para os servidores é Ubuntu Linux LTS. A versão exacta depende do parceiro, do tipo de servidor e aplicação a correr no servidor. É recomendável o uso da versão UBUNTU 22.04 LTS, visto que as versões anteriores deixaram de ter actualizações para novas versões de pacotes, estando restringidas a actualizações de segurança (https://ubuntu.com/about/release-cycle).
 
@@ -37,13 +37,13 @@ Os repositórios que devem ser utilizados nos servidores são o *main*, *restric
 
 Os servidores deverão ter os pacotes actualizados através da ferramenta ```apt update``` e ```apt upgrade```.
 
-## Configuração da BIOS
+### 1.2. Configuração da BIOS
 
 A BIOS deve ser protegida com uma palavra-passe (respeitando as políticas de palavra-passe existentes), para a password de administração da BIOS.
 O boot deve ser configurado para fazer apenas boot do disco rígido e retirar a possibilidade de fazer boot de dispositivos móveis.
 É necessário garantir que todas as passwords habilitadas por defeito (SNMP, Acesso iLO, iDRAC, RSA2) sejam alteradas e deverão ser eliminados todas as contas e serviços que não sejam necessários.
 
-## Configuração da cifra do disco
+### 1.3. Configuração da Cifra do Disco
 
 Para evitar perda de dados em caso de avaria do disco, é aconselhável que os servidores tenham no mínimo dois discos com RAID 1 configurado ou se o servidor tiver 3 ou mais discos deverá ter RAID 5 configurado, à excepção de servidores virtuais.
 
@@ -65,85 +65,146 @@ Quando os discos são superiores a 100GB, a configuração de discos coloca o *L
 
 **Neste manual, para facilitar a instalação do sistema operativo, optou-se por cifrar todo o disco e colocar apenas uma partição que ocupa todo o disco.**
 
-## Configuração de Chaves USB para desbloquear o disco
+## 2. Desbloqueio Automático do Disco
 
-De forma a permitir maior facilidade no desbloqueio dos discos encriptados e sem necessidade de teclado e monitor, foram criados scripts que inicializam USBs com chaves criptográficas que sendo conectadas ao servidor, desbloqueiam o disco no arranque do servidor. 
+Com o disco cifrado, o servidor pede a palavra-passe do disco em cada arranque. Para não ser preciso teclado e monitor, usa-se uma **chave USB de arranque**: com a chave ligada, o disco desbloqueia sozinho.
 
-Uma vez que o servidor tenha arrancado sem erros, <ins>esta chave deve ser desconectada do servidor e armazenada **num local seguro e separado do servidor** (por razões de segurança não deve permanecer no rack do servidor)</ins>. **Não se deve deixar a chave conectada no servidor.** A chave deve ser armazenada num local separado do servidor e apenas conectada ao servidor quando necessário para o desbloqueio do servidor no arranque do mesmo.
+**Regras de utilização da chave USB:**
 
-Por cada servidor deverão existir localmente duas chaves: uma que fica com o gestor da base de dados (ou quem o substitua) e outra com o gestor distrital (ou num escritório ou Unidade Sanitária distrital). 
-
-Diariamente, aquando do início da actividade, o gestor de dados ou ponto focal deve conectar a chave USB no servidor e ligar o servidor. Após o correcto arranque do servidor, deverá retirar a chave USB do servidor e armazená-la em lugar seguro não próximo ao servidor - numa caixa-forte quando existir, ou caso não exista a caixa-forte, deverá guardar num local fechado com acesso restrito e controlado. Aconselha-se a produção de um procedimento para a gestão das chaves USB. 
-
-Os scripts mencionados estão disponíveis neste repositório e só poderão ser executados em Linux.
-
-### Criação da chave do servidor da Unidade Sanitária
-
-Centralmente, no departamento de IT existirá um computador que armazena todas as chaves das unidades sanitárias, onde se criam as chaves USB para as unidades sanitárias. Denomina-se de servidor de chaves.
-
-**Este servidor de chaves tem de ter o pacote uuid instalado. Deve-se executar o comando ```apt-get install uuid```, mas o script verifica a existência desse pacote.**
-
-Deverão criar uma directoria para conter os scripts *create_key.sh* e *create_usb.sh* neste servidor de chaves. Dentro desta directoria, o script de chaves irá criar uma subdirectoria *keys*, que conterá as chaves das Unidades Sanitárias.
-
-Após copiarem os scripts para o servidor de chaves, deverão efectuar os seguintes comandos para colocar os scripts executáveis:
-
-```
-chmod +x create_key.sh
-chmod +x create_usb.sh
-```
-
-No caso de ser necessário criar uma chave para o servidor de uma unidade sanitária, deve-se executar o script ```create_key.sh```.
-
-Em primeiro lugar o *script* irá requerer o nome da unidade sanitária. <ins>Este nome da unidade sanitária não poderá conter espaços</ins>. Por exemplo: ```cs_ceramica```.
-
-Se a unidade sanitária já tiver chaves criadas, dará um erro a indicar que as chaves já existem. Se não existir, o *script* cria uma diretoria com o nome da unidade sanitária, dentro da diretoria *keys*. Em caso de erro no *script*, é possível que a diretoria da unidade sanitária seja criada, sem as chaves dentro. Nessas situações, essa diretoria (e apenas essa) deve ser removida e o *script* deverá ser executado novamente para a mesma unidade sanitária.
-
-Se o *script* executar correctamente, dentro desta diretoria existirá um *script* de instalação da chave no servidor (*install.sh*), a chave para desbloquear o servidor (ficheiro com *extensão *.lek*) e uma chave de backup com extensão *.txt*.
-
-**O ficheiro com extensão *.lek* tem de ter um nome associado**. Caso o ficheiro seja apenas a extensão *.lek*, deve remover a diretoria da unidade sanitária (na diretoria *keys*) e deve repetir o script *install.sh* para a unidade sanitária pretendida.
-
-Poder-se-ão criar várias chaves USB a partir destas chaves armazenadas. 
-
-Este servidor de chaves pode estar replicado em vários computadores e deverá ter backup. 
-
-### Instalação da Chave no Servidor da Unidade Sanitária
-
-Quando se instala um novo servidor na Unidade Sanitária, deve-se configurar a chave para desbloquear o disco. Essa configuração faz-se da seguinte forma:
-
-* Copiar o script de instalação (*install.sh*) e a chave (*que tem a extensão .lek*) para uma USB normal (não a chave USB). Este *script* de instalação e chave estão na directoria *keys* e na subdirectoria com o nome da unidade sanitária (por exemplo *keys/cs_ceramica*).
-* Colocar a USB normal no servidor.
-* Copiar os ficheiros da USB normal para uma (qualquer) directoria no servidor.
-* Correr o *script install.sh* com *sudo* no servidor - *sudo sh install.sh*
-  * O *script* irá requerer (duas vezes) a introdução da palavra-passe para desbloquear o disco que terá de ser introduzida de forma a que seja adicionada a chave que está na USB como método de autenticação válido.
-  * Entre cada pedido de palavra-passe, é normal o *script* demorar um pouco.
-  * O *script* irá adicionar a chave em todas as partições encriptadas existentes no servidor.
-* Se o *script* não der erro, a configuração está feita.
-* Remover os ficheiros *install.sh* e, caso exista, o ficheiro da chave (que tem a extensão *.lek*) do servidor e da USB. 
-
-### Criação de Chave USB para desbloquear disco servidor
-
-No servidor de chaves existe o *script create_usb.sh* que permite inicializar a USB com a chave da Unidade Sanitária.
-
-Para tal basta colocar a USB para albergar a chave no servidor de chaves. Tenha cuidado pois <ins>esta USB será formatada (completamente apagada)</ins>.
-
-<ins>É importante que a USB não esteja montada no sistema operativo, porém o script tenta acautelar esta questão.</ins>
-
-Para inicializar a USB da unidade sanitária (com exemplos do parceiro C-Saúde):
-* Executar o comando ```sudo ./create_usb.sh``` (este *script* tem de ser executado com privilégios de administrador)
-  * Caso a USB não esteja conectada ao servidor o *script* vai indicar que não encontrou nenhuma USB e pára o processo, dando a mensagem ```Nenhuma drive USB encontrada no servidor```.
-  * Caso dê um erro de drive *mounted*, pode executar o comando *umount* com a partição indicada no erro. Por exemplo: ```umount /dev/sdb1```
-* Se encontrar drives USB, irá perguntar o nome da unidade sanitária a configurar na USB.
-* A seguir, confirma qual a USB que se pretende utilizar, listando as várias USBs ligadas ao computador/servidor.
-* Se a USB selecionada não tiver erros, dará início ao processo de inicialização da chave na USB, copiando a chave da unidade sanitária escolhida para a USB.
-
-Após a execução deste script, a <ins>USB torna-se inutilizável para outros fins</ins>, não sendo normalmente reconhecida nos computadores, o que irá minimizar a utilização da USB para outros fins que não o desbloquear o servidor. Recomenda-se que se use um disco USB com pouco espaço (16 MB é perfeitamente aceitável) e com um formato distinto, como por exemplo uma chave, para ser facilmente identificável.
+* Cada servidor tem **duas chaves USB**: uma com o gestor de dados (ou quem o substitua) e outra com o gestor distrital.
+* Todos os dias: ligar a chave USB → ligar o servidor → depois do arranque, **retirar a chave** e guardá-la num local seguro, fechado e **longe do servidor** (caixa-forte, se existir).
+* <ins>**Nunca deixar a chave USB ligada ao servidor.**</ins>
+* Sem chave USB, o servidor pode ser desbloqueado com a palavra-passe do disco (definida na instalação, ver 1.3).
+* **Chave USB perdida: avisar imediatamente o departamento de IT**, para que a chave seja substituída.
 
 ![Exemplo de chave USB](img/usb_key.png)
 
-Após estas acções o servidor encontra-se o disco cifrado e preparado para usar a chave USB para desbloquear o disco. Como alternativa, caso a chave USB (a normal e de backup) esteja danificada ou inacessível, pode-se sempre usar a palavra passe definida no início do procedimento. No entanto, desaconselha-se a utilização da palavra passe, recomendando-se a utilização da chave USB.
+### 2.1. Configuração de Chaves USB para desbloquear o disco
 
+Há dois intervenientes:
 
+| Quem | Onde | O que faz |
+|---|---|---|
+| **Departamento de IT** | Servidor de chaves (central) | Cria as chaves com o *script* ```create_key.sh``` e prepara a **pen de transporte**. |
+| **Técnico de campo** | Servidor da unidade sanitária | Liga a pen de transporte e executa o *script* ```setup.sh```. No fim, essa pen passa a ser a **chave USB de arranque**. |
 
+O servidor de chaves guarda as chaves de todas as unidades sanitárias em ```keys/<ID>-<NOME>``` (ex: ```keys/1100-CS_CERAMICA```). <ins>Deve ter acesso restrito e backup.</ins>
 
+### 2.2. Preparação do servidor de chaves (uma única vez)
 
+Copiar ```create_key.sh``` e ```setup.sh``` para a mesma directoria no servidor de chaves (Linux) e executar:
 
+```
+sudo apt-get install uuid dosfstools
+chmod +x create_key.sh setup.sh
+```
+
+### 2.3. Nova unidade sanitária
+
+Usar uma pen USB pequena (32 MB ou mais chega) e com um formato fácil de identificar (por exemplo, em forma de chave). <ins>A pen será apagada.</ins>
+
+#### Passo 1 - Departamento de IT: criar a chave e a pen de transporte
+
+```
+sudo ./create_key.sh --genkey
+```
+
+1. ```ID da unidade sanitaria:``` → ID sem espaços (ex: ```1100```).
+2. ```Nome da unidade sanitaria:``` → nome (ex: ```cs ceramica```; fica ```CS_CERAMICA```).
+3. ```Preparar agora a pen de transporte?``` → ```s```
+4. ```Cifrar a pen de transporte?``` → ```s``` se a pen viajar com alguém que não é de confiança (ver 2.6).
+5. Escolher o número da pen USB na lista. Se a pen não estiver ligada, o *script* pede para a inserir e carregar em ENTER (tenta uma vez; se continuar sem pen, termina).
+6. Se a pen for cifrada: **anotar a palavra-passe de transporte** mostrada no fim.
+
+#### Passo 2 - Departamento de IT: enviar a pen
+
+Enviar a pen de transporte ao técnico de campo. Se for cifrada, enviar a palavra-passe **por outro canal** (telefone/SMS), nunca junto com a pen.
+
+#### Passo 3 - Técnico de campo: configurar o servidor
+
+Antes de começar, confirmar que:
+* O servidor foi instalado com o disco cifrado (secção 1).
+* Sabe a **palavra-passe do disco**.
+* Tem a **palavra-passe de transporte**, se a pen for cifrada.
+* Tem uma **segunda pen USB** (vazia ou sem nada importante) para a segunda chave USB. <ins>Será apagada.</ins>
+
+Passos:
+
+1. Ligar a pen de transporte ao servidor.
+2. Abrir um terminal e executar **um** dos seguintes comandos:
+   * **Com ambiente gráfico** (a pen abre sozinha no ecrã):
+     ```
+     sudo bash /media/$USER/LUKS_SETUP/setup.sh
+     ```
+   * **Sem ambiente gráfico** (só texto):
+     ```
+     sudo mount /dev/disk/by-label/LUKS_SETUP /mnt
+     sudo bash /mnt/setup.sh
+     ```
+3. Se aparecer ```Palavra-passe de transporte:``` → escrever a palavra-passe de transporte e carregar em ENTER. <ins>O que se escreve não aparece no ecrã</ins>; os hífenes são opcionais.
+4. Confirmar que a unidade sanitária mostrada está correcta, escrever ```s``` e carregar em ENTER.
+5. Quando aparecer ```Enter any existing passphrase:``` → escrever a **palavra-passe do disco** e carregar em ENTER. É pedida **duas vezes** e cada passo pode demorar alguns segundos.
+6. Aparece ```Chave USB de arranque n.o 1 criada.```: a pen de transporte passou a ser a **primeira chave USB de arranque**.
+7. Quando aparecer ```Criar outra chave USB de arranque?``` → ```s``` para criar já a segunda chave (gestor distrital):
+   1. Retirar a chave USB que está ligada (**guardá-la à parte**, já está pronta).
+   2. Ligar a segunda pen e carregar em ENTER.
+   3. Confirmar a pen mostrada com ```s```. Aparece ```Chave USB de arranque n.o 2 criada.```
+   4. A pergunta repete-se: responder ```n``` quando já não forem precisas mais chaves.
+8. Esperar pela mensagem ```Concluido: ... chave(s) USB de arranque criada(s).```
+9. Com uma das chaves ligada, reiniciar o servidor (```sudo reboot```). O disco deve desbloquear sozinho (pode demorar até 20 segundos). Recomenda-se repetir o teste com a outra chave.
+10. Retirar a chave USB. Entregar uma chave ao gestor de dados e a outra ao gestor distrital, que as guardam em local seguro.
+
+Se algo correr mal, ver 2.4. Na maioria dos erros a pen **não** é apagada e basta repetir o passo 3.
+
+#### Passo 4 - Departamento de IT: segunda chave USB (só se não foi criada no passo 3)
+
+Se a segunda chave USB não foi criada no servidor da unidade sanitária (passo 3.7), criá-la no servidor de chaves e enviá-la:
+
+```
+sudo ./create_key.sh --spare
+```
+
+### 2.4. Problemas frequentes (técnico de campo)
+
+| Mensagem / situação | O que fazer |
+|---|---|
+| ```special device /dev/disk/by-label/LUKS_SETUP does not exist``` ou a pen não aparece | Confirmar que a pen está bem ligada (ou mudar de porta USB) e repetir. |
+| ```Este script tem de ser executado a partir da pen USB de transporte.``` | Executar o ```setup.sh``` que está na pen, com um dos comandos do passo 3.2. |
+| ```Nao foi possivel desmontar a pen``` | Fechar as janelas e terminais abertos na pen e executar o comando indicado na mensagem. |
+| ```Palavra-passe errada.``` | Confirmar a palavra-passe de transporte com o departamento de IT. Após 3 tentativas o *script* pára; repetir o passo 3. |
+| ```Nenhuma particao LUKS encontrada neste servidor.``` | O disco não está cifrado. O servidor tem de ser instalado conforme a secção 1. |
+| ```No key available with this passphrase.``` | Palavra-passe do disco errada. Repetir o passo 3. |
+| Mensagem com ```A pen NAO foi apagada``` | Repetir o passo 3. Se voltar a falhar, contactar o departamento de IT. |
+| ```falhou a preparacao desta pen``` | Responder ```s``` a ```Criar outra chave USB de arranque?``` e tentar com outra pen. |
+| ```Nenhuma pen nova encontrada.``` | Ligar a nova pen (ou mudar de porta USB) e responder ```s``` novamente. A pen tem de ser diferente das que já foram preparadas. |
+| ```nenhuma chave USB foi criada``` | Contactar o departamento de IT para criar uma chave USB (```--spare```). Até lá, no arranque, usar a palavra-passe do disco. |
+| No arranque aparece ```Insira chave USB e pressione ENTER:``` | A chave USB não foi encontrada: ligar a chave e carregar em ENTER, ou escrever a palavra-passe do disco. |
+
+### 2.5. Outras operações (departamento de IT)
+
+Todas no servidor de chaves. Excepto a ```--genkey```, as operações pedem apenas o **ID** da unidade sanitária. (Para unidades criadas com versões anteriores dos *scripts*, com a directoria ```keys/<nome>```, o ID é o nome da directoria.)
+
+| Situação | Comando |
+|---|---|
+| Procurar uma unidade sanitária | ```./create_key.sh --list [texto]``` (ex: ```--list 1100```, ```--list nama```; sem *sudo*) |
+| Pen de transporte **avariada** antes da instalação | ```sudo ./create_key.sh --transport [--enc]``` e repetir os passos 2 e 3 |
+| Chave USB **avariada** | ```sudo ./create_key.sh --spare``` |
+| Chave USB ou pen de transporte **perdida** | ```sudo ./create_key.sh --rotate [--enc]``` (ver abaixo) |
+| Técnico precisa da palavra-passe de transporte | ```cat keys/<ID>-<NOME>/transport-password.txt``` |
+| Servidor sem nenhuma chave USB | No arranque, escrever a palavra-passe do disco ou o código de recuperação (```keys/<ID>-<NOME>/luks-recover-key.txt```) |
+
+**Substituição da chave (```--rotate```).** Todas as chaves USB de uma unidade sanitária têm a mesma chave; por isso, <ins>se uma chave USB ou pen de transporte se perder, a chave tem de ser substituída</ins>:
+
+1. ```sudo ./create_key.sh --rotate [--enc]```: a chave actual é guardada em ```keys/<ID>-<NOME>/old/``` e é preparada uma pen de transporte com a chave nova e todas as chaves antigas (para serem removidas).
+2. O técnico de campo executa o **passo 3**, igual à instalação, mas **não é pedida a palavra-passe do disco**. O *setup.sh* só remove as chaves antigas depois de confirmar que a nova funciona.
+3. Se a segunda chave USB não foi criada no passo 3, criá-la com ```--spare```. **Recolher as chaves USB antigas**, que deixam de funcionar.
+
+Notas: a palavra-passe do disco não é alterada. Chaves USB criadas com ```--spare``` depois de um ```--rotate``` só funcionam depois de o passo 3 ter sido executado no servidor.
+
+### 2.6. Segurança
+
+* A pen de transporte contém a chave do servidor: deve ser tratada como uma chave USB. <ins>Se se perder, usar ```--rotate```</ins>.
+* **Pen cifrada (```--enc```)**: usar quando a pen viaja com alguém que não é de confiança. As chaves vão cifradas (AES-256) no ficheiro *chaves.enc*, com uma palavra-passe de transporte aleatória, diferente para cada pen, registada em ```keys/<ID>-<NOME>/transport-password.txt```. A cifra serve apenas para o transporte: no servidor de chaves e na chave USB de arranque as chaves ficam sem cifra (o servidor tem de as ler no arranque, sem intervenção).
+* O *setup.sh* copia a pen para RAM e decifra as chaves apenas em RAM; os ficheiros temporários são apagados no fim.
+* A chave USB de arranque não aparece noutros computadores (Windows, etc.), o que dificulta o seu uso para outros fins.
+* O código de recuperação (```luks-recover-key.txt```) fica apenas no servidor de chaves; é apagado da pen quando esta passa a chave USB de arranque.
